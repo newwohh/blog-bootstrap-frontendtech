@@ -9,7 +9,7 @@ const emailInput = document.getElementById("email");
 
 alertMessage.style.display = "none";
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = [nameInput, emailInput, passwordInput, repeatedPasswordInput];
 
@@ -25,21 +25,52 @@ form.addEventListener("submit", (e) => {
     "At least 1 digit At least 2 special characters At least 1 alphabetic character No blank space",
   ];
 
+  let isValid = true;
+
   for (let i = 0; i < 3; i++) {
     if (regex[i].test(inputs[i].value) == false) {
       inputs[i].style.borderColor = "red";
       alertMessage.style.display = "block";
       msg.textContent = message[i];
+      isValid = false;
     } else {
       inputs[i].style.borderColor = "green";
-      alertMessage.style.display = "none";
     }
   }
 
   if (
-    passwordInput.value == repeatedPasswordInput.value &&
-    passwordInput.value.length != 0
+    passwordInput.value !== repeatedPasswordInput.value ||
+    passwordInput.value.length === 0
   ) {
-    window.alert("Hola Amigo!");
+    alertMessage.style.display = "block";
+    msg.textContent = "Passwords do not match.";
+    isValid = false;
+  }
+
+  if (isValid) {
+    const name = nameInput.value;
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    try {
+      const response = await fetch("http://localhost:3000/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userName: name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alertMessage.textContent = "User registered successfully!";
+      } else {
+        alertMessage.textContent = data.error || "An error occurred.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alertMessage.textContent = "An error occurred.";
+    }
   }
 });

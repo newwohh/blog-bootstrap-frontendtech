@@ -108,7 +108,7 @@
     <main class="container mt-4">
       <div></div>
       <div class="w-50 offset-3 text-center">
-        <form class="submitMe">
+        <form id="loginForm" class="submitMe">
           <div
             class="form-group"
             style="display: flex; align-items: center; flex-direction: column"
@@ -141,8 +141,49 @@
           </button>
         </form>
       </div>
+      <!-- ... (your other script includes) ... -->
 
-      <div></div>
+      <script>
+        const loginForm = document.getElementById("loginForm");
+        const loginEmailInput = document.getElementById("email");
+        const loginPasswordInput = document.getElementById("password");
+
+        loginForm.addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const loginEmail = loginEmailInput.value;
+          const loginPassword = loginPasswordInput.value;
+
+          if (!loginEmail || !loginPassword) {
+            alert("Please fill in all fields.");
+            return;
+          }
+
+          try {
+            const response = await fetch("http://localhost:3000/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: loginEmail,
+                password: loginPassword,
+              }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (response.ok) {
+              alert("Login successful!");
+            } else {
+              alert(data.error || "Login failed.");
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred.");
+          }
+        });
+      </script>
     </main>
   </body>
 </html>
