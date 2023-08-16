@@ -1,7 +1,6 @@
 const express = require("express");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
-const path = require("path");
 
 app = express();
 app.use(express.urlencoded({ extended: true }));
