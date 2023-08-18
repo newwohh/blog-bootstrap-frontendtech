@@ -26,7 +26,7 @@ function validateUser(user) {
     !/^(?=.*[A-Z])(?=.*\d)/.test(user.password) ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)
   ) {
-    return true;
+    return false;
   }
 
   return true;
