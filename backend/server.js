@@ -54,11 +54,11 @@ function validateUser(user) {
     !user.userName ||
     !user.email ||
     !user.password ||
-    user.password.length > 8 ||
+    !user.password.length > 8 ||
     !/^(?=.*[A-Z])(?=.*\d)/.test(user.password) ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)
   ) {
-    return true;
+    return false;
   }
 
   return true;
@@ -71,19 +71,19 @@ app.post("/signup", async (req, res) => {
     return res.status(400).json({ error: "Invalid user data" });
   }
 
-  const existingUser = users.find((user) => user.email === email);
+  // const existingUser = users.find((user) => user.email === email);
+  const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(409).json({ error: "User already exists" });
   }
 
   const newUser = { userName, email, password };
-  registeredUsers.push(newUser);
+  localUsers.push(newUser);
 
   const userToDb = await User.create({
     userName: req.body.userName,
     email: req.body.email,
     password: req.body.password,
-    // passwordConfirm: req.body.passwordConfirm,
   });
 
   let id = userToDb._id;
