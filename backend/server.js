@@ -13,7 +13,9 @@ app.use(cors());
 app.use(cookieparser());
 app.use(express.json());
 
+// isLocal is the variable for enabling users to store local or cloud
 let isLocal = true;
+
 var DB;
 isLocal === true
   ? (DB = process.env.DATABASE.replace(
