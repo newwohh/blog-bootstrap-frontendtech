@@ -18,6 +18,8 @@ const DB = process.env.DATABASE.replace(
   process.env.DATABASE_PASSWORD
 );
 
+const localUsers = [];
+
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
@@ -25,14 +27,6 @@ mongoose
   })
   .then(() => console.log("DB SUCCESS"))
   .catch((error) => console.error("DB ERROR:", error));
-
-const users = [
-  {
-    userName: "testUser",
-    email: "email@example.com",
-    password: "passwordD1234",
-  },
-];
 
 const userSchema = new mongoose.Schema({
   userName: {
@@ -83,8 +77,7 @@ app.post("/signup", async (req, res) => {
   }
 
   const newUser = { userName, email, password };
-  users.push(newUser);
-  console.log(users);
+  registeredUsers.push(newUser);
 
   const userToDb = await User.create({
     userName: req.body.userName,
@@ -114,6 +107,7 @@ app.post("/login", async (req, res) => {
   }
 
   const loggedUser = await User.findOne({ email });
+  localUsers.push(loggedUser.toObject());
 
   if (!loggedUser) {
     return res.status(404).json({ error: "User not found" });
@@ -123,6 +117,7 @@ app.post("/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid password" });
   }
 
+  console.log(localUsers);
   return res
     .status(200)
     .json({ message: "User logged in successfully", user: loggedUser });
