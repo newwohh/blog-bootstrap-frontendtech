@@ -13,10 +13,14 @@ app.use(cors());
 app.use(cookieparser());
 app.use(express.json());
 
-const DB = process.env.DATABASE.replace(
-  "<PASSWORD>",
-  process.env.DATABASE_PASSWORD
-);
+let isLocal = true;
+var DB;
+isLocal === true
+  ? (DB = process.env.DATABASE.replace(
+      "<PASSWORD>",
+      process.env.DATABASE_PASSWORD
+    ))
+  : (DB = "mongodb://localhost:27017");
 
 const localUsers = [];
 
