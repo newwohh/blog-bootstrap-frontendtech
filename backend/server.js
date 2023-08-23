@@ -1,13 +1,30 @@
 const express = require("express");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 
 app = express();
 app.use(express.urlencoded({ extended: true }));
+dotenv.config({ path: "./config.env" });
 
 app.use(cors());
 app.use(cookieparser());
 app.use(express.json());
+
+const DB = process.env.DATABASE.replace(
+  "<PASSWORD>",
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("DB SUCCESS"))
+  .catch((error) => console.error("DB ERROR:", error));
 
 const users = [
   {
@@ -16,6 +33,27 @@ const users = [
     password: "passwordD1234",
   },
 ];
+
+const userSchema = new mongoose.Schema({
+  userName: {
+    type: String,
+    required: [true, "Please type name"],
+  },
+  email: {
+    type: String,
+    required: [true, "Please type E-Mail"],
+    unique: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: [true, "Please type password"],
+    minlength: 8,
+    select: false,
+  },
+});
+
+const User = mongoose.model("User", userSchema);
 
 function validateUser(user) {
   if (
@@ -32,7 +70,7 @@ function validateUser(user) {
   return true;
 }
 
-app.post("/signup", (req, res) => {
+app.post("/signup", async (req, res) => {
   const { userName, email, password } = req.body;
 
   if (!validateUser(req.body)) {
@@ -48,35 +86,47 @@ app.post("/signup", (req, res) => {
   users.push(newUser);
   console.log(users);
 
-  const userResponse = { userName, email };
-  return res
-    .status(201)
-    .json({ message: "User signed up successfully", user: userResponse });
+  const userToDb = await User.create({
+    userName: req.body.userName,
+    email: req.body.email,
+    password: req.body.password,
+    // passwordConfirm: req.body.passwordConfirm,
+  });
+
+  let id = userToDb._id;
+
+  const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES,
+  });
+
+  res.status(201).json({
+    message: "User signed up successfully",
+    token: token,
+    user: userToDb,
+  });
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!validateUser(req.body)) {
     return res.status(400).json({ error: "Invalid user data" });
   }
 
-  const user = users.find((user) => user.email === email);
-  if (!user) {
+  const loggedUser = await User.findOne({ email });
+
+  if (!loggedUser) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  if (user.password !== password) {
+  if (loggedUser.password === password) {
     return res.status(401).json({ error: "Invalid password" });
   }
 
-  const userResponse = { userName: user.userName, email: user.email };
   return res
     .status(200)
-    .json({ message: "User logged in successfully", user: userResponse });
+    .json({ message: "User logged in successfully", user: loggedUser });
 });
-
-console.log(users);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
